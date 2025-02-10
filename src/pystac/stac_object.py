@@ -15,7 +15,7 @@ from .constants import (
     ROOT_REL,
     SELF_REL,
 )
-from .errors import StacError
+from .errors import PystacError, StacError
 from .link import Link
 
 if TYPE_CHECKING:
@@ -186,42 +186,64 @@ class STACObject(ABC):
         return self._reader.read_file(href)
 
     def get_writer(self) -> Writer:
+        """Returns this object's writer."""
         return self._writer
 
     def set_writer(self, writer: Writer) -> None:
+        """Sets this object's writer."""
         self._writer = writer
 
-    def write_file(self, href: str | Path) -> None:
-        """Writes this STAC object to a file"""
-        self._writer.write_file(self, href)
+    def save_object(self, href: str | Path | None = None) -> None:
+        """Writes this STAC object to a file.
+
+        Args:
+            href: If not provided, this file's self href will be used.
+        """
+        if not href:
+            href = self.get_href()
+        if not href:
+            self._writer.write_file(self, href)
+        else:
+            raise PystacError("cannot save an object without an href")
 
     def get_link(self, rel: str) -> Link | None:
+        """Returns the first link with the given rel type."""
         return next((link for link in self._links if link.rel == rel), None)
 
     def iter_links(self) -> Iterator[Link]:
+        """Iterates over all links."""
         for link in self._links:
             yield link
 
     def set_link(self, link: Link) -> None:
+        """Sets a link.
+
+        Removes all other links with the same rel type.
+        """
         self.remove_links(link.rel)
         link.set_owner(self)
         self._links.append(link)
 
     def remove_links(self, rel: str) -> None:
+        """Removes all links with the given rel type."""
         self._links = [link for link in self._links if link.rel != rel]
 
     def add_link(self, link: Link) -> None:
+        """Adds a single link."""
         link.set_owner(self)
         self._links.append(link)
 
     def get_root_link(self) -> Link | None:
+        """Returns the root link, if it exists."""
         return self.get_link(ROOT_REL)
 
     def get_parent_link(self) -> Link | None:
+        """Returns the parent link, if it exists."""
         return self.get_link(PARENT_REL)
 
     @abstractmethod
-    def to_dict(self) -> dict[str, Any]: ...
+    def to_dict(self) -> dict[str, Any]:
+        """Converts this STAC object to a dictionary."""
 
     def __repr__(self) -> str:
         return f"<pystac.{self.__class__.__name__} id={self.id}>"

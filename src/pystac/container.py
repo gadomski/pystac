@@ -61,9 +61,15 @@ class Container(STACObject):
             yield from child.walk()
 
     def add_item(self, item: Item) -> None:
+        """Adds an item to this container."""
         self.add_link(Link.item(item))
 
     def get_items(self, recursive: bool = False) -> Iterator[Item]:
+        """Iterates over all items in this container.
+
+        Args:
+            recursive: If true, include all items belonging to children as well.
+        """
         for link in self.iter_links():
             if link.is_item():
                 stac_object = link.get_stac_object()
@@ -75,9 +81,15 @@ class Container(STACObject):
                     yield from child.get_items(recursive=recursive)
 
     def add_child(self, child: Container) -> None:
+        """Adds a child to this container."""
         self.add_link(Link.child(child))
 
     def get_children(self, recursive: bool = False) -> Iterator[Container]:
+        """Iterates over all children in this container.
+
+        Args:
+            recursive: If true, include all children's children, and so on.
+        """
         for link in filter(lambda link: link.is_child(), self.iter_links()):
             stac_object = link.get_stac_object()
             if isinstance(stac_object, Container):
@@ -86,23 +98,42 @@ class Container(STACObject):
                     yield from stac_object.get_children(recursive=recursive)
 
     def get_children_and_items(self) -> Iterator[STACObject]:
+        """Iterates over all children and items in this container.
+
+        If you'd like to do recursive iteration over all children and items, use
+        [walk][pystac.Container.walk].
+        """
         for link in filter(
             lambda link: link.is_child() or link.is_item(), self.iter_links()
         ):
             yield link.get_stac_object()
 
-    def get_collections(self) -> Iterator[Collection]:
+    def get_collections(self, recursive: bool = False) -> Iterator[Collection]:
+        """Iterates over all collections in this container.
+
+        Args:
+            recursive: If true, include all children's collections, and so on.
+        """
         from .collection import Collection
 
         for link in filter(lambda link: link.is_child(), self.iter_links()):
             stac_object = link.get_stac_object()
             if isinstance(stac_object, Collection):
                 yield stac_object
+            if recursive and isinstance(stac_object, Container):
+                yield from stac_object.get_collections(recursive=recursive)
 
     def render(
         self,
         root: str | Path,
     ) -> None:
+        """Renders this container and all of its children and items.
+
+        See the [pystac.render][] documentation for more.
+
+        Args:
+            root: The directory at the root of the rendered filesystem tree.
+        """
         # TODO allow renderer customization
         from .render import DefaultRenderer
 
@@ -110,6 +141,15 @@ class Container(STACObject):
         renderer.render(self)
 
     def save(self, writer: Writer | None = None) -> None:
+        """Saves this container and all of its children.
+
+        This will error if any objects don't have an `href` set. Use
+        [Container.render][pystac.Container.render] to set those `href` values.
+
+        Args:
+            writer: The writer that will be used for the save operation. If not
+                provided, this container's writer will be used.
+        """
         if writer is None:
             writer = self.get_writer()
         writer.write_file(self)
