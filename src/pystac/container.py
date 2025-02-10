@@ -31,7 +31,7 @@ class Container(STACObject):
         for root, _, items in self.walk():
             root.stac_version = version
             for item in items:
-                item.stac_version = items
+                item.stac_version = version
 
     def walk(self) -> Iterator[tuple[Container, list[Container], list[Item]]]:
         """Walks this container, yielding a tuple of this container, its
@@ -46,15 +46,16 @@ class Container(STACObject):
             >>> for root, children, items in catalog.walk():
             ...     print(root, children, items)
         """
-        children = []
-        items = []
+        children: list[Container] = []
+        items: list[Item] = []
         for link in filter(
             lambda link: link.is_child() or link.is_item(), self.iter_links()
         ):
-            if link.is_child():
-                children.append(link.get_stac_object())
-            if link.is_item():
-                items.append(link.get_stac_object())
+            stac_object = link.get_stac_object()
+            if isinstance(stac_object, Container):
+                children.append(stac_object)
+            if isinstance(stac_object, Item):
+                items.append(stac_object)
         yield self, children, items
         for child in children:
             yield from child.walk()

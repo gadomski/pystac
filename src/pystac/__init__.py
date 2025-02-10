@@ -58,4 +58,5 @@ __all__ = [
     "TemporalExtent",
     "Writer",
     "read_file",
+    "write_file",
 ]
