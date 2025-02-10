@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 import pystac
-from pystac import DEFAULT_STAC_VERSION, Catalog, Item, PystacError, StacError
+from pystac import DEFAULT_STAC_VERSION, Catalog, Item, Link, PystacError, StacError
 
 
 def test_catalog() -> None:
@@ -112,3 +112,12 @@ def test_wrong_type_field() -> None:
     d["type"] = "CustomCatalog"
     with pytest.raises(StacError):
         Catalog.from_dict(d)
+
+
+def test_read_file_self_link(catalog: Catalog) -> None:
+    href = catalog.get_href()
+    assert href
+    catalog.set_href(None)
+    catalog.set_link(Link(href=href, rel="self"))
+    children = list(catalog.get_children())
+    assert len(children) == 3

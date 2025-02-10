@@ -7,6 +7,7 @@ from .extent import Extent, SpatialExtent, TemporalExtent
 from .functions import get_stac_version, read_dict, set_stac_version
 from .io import Reader, Writer, read_file, write_file
 from .item import Item
+from .link import Link
 from .render import DefaultRenderer, Renderer
 from .stac_object import STACObject
 
@@ -18,6 +19,7 @@ __all__ = [
     "DefaultRenderer",
     "Extent",
     "Item",
+    "Link",
     "PystacError",
     "Reader",
     "Renderer",

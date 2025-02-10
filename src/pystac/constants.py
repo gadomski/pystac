@@ -1,4 +1,5 @@
 DEFAULT_STAC_VERSION = "1.1.0"
+"""The default STAC version for this library."""
 
 DEFAULT_BBOX: list[list[int | float]] = [[-180, -90, 180, 90]]
 DEFAULT_INTERVAL: list[list[str | None]] = [[None, None]]

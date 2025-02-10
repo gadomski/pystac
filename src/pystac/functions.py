@@ -6,7 +6,12 @@ from .stac_object import STACObject
 
 
 def get_stac_version() -> str:
-    """Returns the default STAC version.
+    """**DEPRECATED** Returns the default STAC version.
+
+    Warning:
+        This function is deprecated as of PySTAC v2.0 and will be removed in a
+        future version. Just look at
+        [DEFAULT_STAC_VERSION][pystac.DEFAULT_STAC_VERSION].
 
     Returns:
         The default STAC version.
@@ -15,6 +20,11 @@ def get_stac_version() -> str:
         >>> pystac.get_stac_version()
         "1.1.0"
     """
+    warnings.warn(
+        "This function is deprecated as of PySTAC v2.0 and will be removed in a "
+        "future version. Use DEFAULT_STAC_VERSION instead.",
+        FutureWarning,
+    )
     return DEFAULT_STAC_VERSION
 
 

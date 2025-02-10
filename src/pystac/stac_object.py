@@ -13,6 +13,7 @@ from .constants import (
     ITEM_TYPE,
     PARENT_REL,
     ROOT_REL,
+    SELF_REL,
 )
 from .errors import StacError
 from .link import Link
@@ -103,6 +104,16 @@ class STACObject(ABC):
         links: list[Link | dict[str, Any]] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Creates a new STAC object.
+
+        Args:
+            id: The STAC object's id
+            stac_version: If not provided or `None`, will default to
+                [DEFAULT_STAC_VERSION][pystac.DEFAULT_STAC_VERSION]
+            stac_extensions: A list of extension schema urls
+            links: A list of links
+            **kwargs: Any extra fields on the object
+        """
         from .io import Reader, Writer
 
         self.id = id
@@ -123,23 +134,55 @@ class STACObject(ABC):
         self._writer = Writer()
 
     def get_href(self) -> str | None:
-        return self._href
+        """Returns this STAC object's href.
 
-    def set_href(self, href: str, set_self_link: bool = False) -> None:
+        This is assigned when an object is read from a file. Objects created
+        directly do not have an href.
+        """
+        if self._href:
+            return self._href
+        elif link := self.get_link(SELF_REL):
+            return link.href
+        else:
+            return None
+
+    def set_href(self, href: str | None, set_self_link: bool = False) -> None:
+        """Sets this STAC object's href.
+
+        Args:
+            href: The href
+            set_self_link: If true, the `self` link will be set to this href.
+                It's more common to set `self` links via
+                [Container.render][pystac.Container.render].
+        """
         self._href = href
         if set_self_link:
-            self.set_link(Link.self(self))
+            if href:
+                self.set_link(Link.self(self))
+            else:
+                self.remove_links(SELF_REL)
 
     def get_reader(self) -> Reader:
+        """Returns this STAC object's reader."""
         return self._reader
 
     def set_reader(self, reader: Reader) -> None:
+        """Sets this STAC object's reader.
+
+        This reader will be shared with any objects that are read "from" this
+        object, e.g. via resolving links.
+        """
         self._reader = reader
 
     def read_file(self, href: str) -> STACObject:
+        """Reads a new STAC object from a file.
+
+        This method will resolve relative hrefs by using this STAC object's href
+        or, if not set, its `self` link.
+        """
         from . import io
 
-        href = io.make_absolute_href(href, self._href)
+        href = io.make_absolute_href(href, self.get_href())
         return self._reader.read_file(href)
 
     def get_writer(self) -> Writer:
@@ -160,10 +203,12 @@ class STACObject(ABC):
             yield link
 
     def set_link(self, link: Link) -> None:
-        links = [other for other in self._links if other.rel != link.rel]
+        self.remove_links(link.rel)
         link.set_owner(self)
-        links.append(link)
-        self._links = links
+        self._links.append(link)
+
+    def remove_links(self, rel: str) -> None:
+        self._links = [link for link in self._links if link.rel != rel]
 
     def add_link(self, link: Link) -> None:
         link.set_owner(self)
