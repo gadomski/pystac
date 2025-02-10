@@ -57,7 +57,26 @@ class STACObject(ABC):
 
     @classmethod
     def from_dict(cls: type[STACObject], d: dict[str, Any]) -> STACObject:
-        """Creates a STAC object from a dictionary."""
+        """Creates a STAC object from a dictionary.
+
+        If you already know what type of STAC object your dictionary represents,
+        use the initializer directly, e.g. `Catalog(**d)`.
+
+        Args:
+            d: A JSON dictionary
+
+        Returns:
+            A STAC object
+
+        Raises:
+            StacError: If the type field is not present or not a value we recognize.
+
+        Examples:
+            >>> # Use this when you don't know what type of object it is
+            >>> stac_object = STACObject.from_dict(d)
+            >>> # Use this when you know you have a catalog
+            >>> catalog = Catalog(**d)
+        """
         if type_value := d.get("type"):
             if type_value == CATALOG_TYPE:
                 from .catalog import Catalog
