@@ -79,6 +79,17 @@ def registry_contents() -> Iterator[tuple[str, dict[str, Any]]]:
         yield uri, read_schema(path)
 
     for name in (
+        "basics",
+        "datetime",
+        "instrument",
+        "licensing",
+        "provider",
+    ):
+        uri = f"https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/{name}.json"
+        path = f"stac/v1.0.0/{name}.json"
+        yield uri, read_schema(path)
+
+    for name in (
         "Feature",
         "Geometry",
     ):
