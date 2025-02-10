@@ -1,5 +1,6 @@
 import importlib.resources
 import json
+import warnings
 from typing import Any, Iterator, cast
 
 import httpx
@@ -9,6 +10,7 @@ from referencing import Registry
 
 from ..catalog import Catalog
 from ..collection import Collection
+from ..errors import PystacWarning
 from ..item import Item
 from ..stac_object import STACObject
 from .base import Validator
@@ -31,20 +33,27 @@ class JsonschemaValidator(Validator):
 
     def validate(self, stac_object: STACObject) -> None:
         if isinstance(stac_object, Item):
-            file_name = "item.json"
+            slug = "item"
         elif isinstance(stac_object, Catalog):
-            file_name = "catalog.json"
+            slug = "catalog"
         elif isinstance(stac_object, Collection):
-            file_name = "collection.json"
+            slug = "collection"
         else:
             raise Exception("unreachable")
-        validator = self._get_validator(stac_object.stac_version, file_name)
+        validator = self._get_validator(stac_object.stac_version, slug)
         validator.validate(stac_object.to_dict())
 
-    def _get_validator(self, version: str, file_name: str) -> Draft7Validator:
-        path = f"stac/v{version}/{file_name}"
+    def _get_validator(self, version: str, slug: str) -> Draft7Validator:
+        path = f"stac/v{version}/{slug}.json"
         if path not in self._schemas:
-            self._schemas[path] = read_schema(path)
+            try:
+                self._schemas[path] = read_schema(path)
+            except FileNotFoundError:
+                uri = f"https://schemas.stacspec.org/v{version}/{slug}-spec/json-schema/{slug}.json"
+                warnings.warn(f"Fetching core schema from {uri}", PystacWarning)
+                response = httpx.get(uri).raise_for_status()
+                response.raise_for_status()
+                self._schemas[path] = response.json()
         schema = self._schemas[path]
         return Draft7Validator(schema, registry=self._registry)
 
