@@ -1,8 +1,11 @@
 import json
 from pathlib import Path
 
+import pytest
+
 import pystac
-from pystac import Item
+from pystac import Item, StacWarning
+from pystac.constants import DEFAULT_BBOX
 
 
 def test_init_by_id() -> None:
@@ -19,3 +22,8 @@ def test_read_file(examples_path: Path) -> None:
         d = json.load(f)
     item = pystac.read_file(examples_path / "simple-item.json")
     assert item.to_dict() == d
+
+
+def test_no_geometry_but_bbox() -> None:
+    with pytest.warns(StacWarning):
+        Item("an-id", bbox=DEFAULT_BBOX)

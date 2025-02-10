@@ -41,6 +41,7 @@ nav:
       - api/render.md
       - api/reader.md
       - api/writer.md
+      - api/validate.md
       - api/constants.md
 
 extra:

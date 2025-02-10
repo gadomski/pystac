@@ -3,7 +3,7 @@ from .catalog import Catalog
 from .collection import Collection
 from .constants import DEFAULT_STAC_VERSION
 from .container import Container
-from .errors import PystacError, StacError
+from .errors import PystacError, PystacWarning, StacError, StacWarning
 from .extent import Extent, SpatialExtent, TemporalExtent
 from .functions import get_stac_version, read_dict, set_stac_version
 from .io import Reader, Writer, read_file, write_file
@@ -24,11 +24,13 @@ __all__ = [
     "ItemAsset",
     "Link",
     "PystacError",
+    "PystacWarning",
     "Reader",
     "Renderer",
     "STACObject",
     "SpatialExtent",
     "StacError",
+    "StacWarning",
     "TemporalExtent",
     "Writer",
     "get_stac_version",

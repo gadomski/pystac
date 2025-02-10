@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import copy
+import datetime as dt
+import warnings
 from typing import Any
 
 from .asset import Asset
 from .constants import ITEM_TYPE
+from .errors import StacWarning
 from .extensions import Extension, Extensions, ProjectionExtension
 from .link import Link
 from .stac_object import STACObject
@@ -28,6 +31,11 @@ class Item(STACObject):
         id: str,
         geometry: dict[str, Any] | None = None,
         bbox: list[float | int] | None = None,
+        datetime: dt.datetime
+        | tuple[dt.datetime | None, dt.datetime | None]
+        | str
+        | tuple[str | None, str | None]
+        | None = None,
         properties: dict[str, Any] | None = None,
         assets: dict[str, Asset | dict[str, Any]] | None = None,
         collection: str | None = None,
@@ -36,9 +44,45 @@ class Item(STACObject):
         links: list[Link | dict[str, Any]] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Creates a new item.
+
+        Args:
+            id: The item id
+            geometry: The item geometry
+            bbox: The item bbox. Will be automatically set to None, with a
+                warning, if the geometry is none.
+            datetime: The item datetime, or start and end datetimes, as a string
+                or as a datetime object.
+        """
         self.geometry = geometry
-        self.bbox = bbox
+        if self.geometry is None and bbox:
+            warnings.warn(
+                "bbox cannot be set if geometry is None. Setting bbox to None",
+                StacWarning,
+            )
+            self.bbox = None
+        else:
+            self.bbox = bbox
+        if isinstance(datetime, dt.datetime):
+            properties["datetime"] = datetime.isoformat()
+        elif isinstance(datetime, tuple):
+            properties["datetime"] = None
+            for key, value in (
+                ("start_datetime", datetime[0]),
+                ("end_datetime", datetime[1]),
+            ):
+                if value is None or isinstance(value, str):
+                    properties[key] = value
+                else:
+                    properties[key] = value.isoformat
         self.properties = properties or dict()
+        if not any(
+            key in self.properties
+            for key in ("datetime", "start_datetime", "end_datetime")
+        ):
+            self.properties["datetime"] = dt.datetime.now(
+                tz=dt.timezone.utc
+            ).isoformat()
 
         if assets is None:
             self.assets = dict()
@@ -68,7 +112,8 @@ class Item(STACObject):
         d["properties"].update(self.ext.to_dict())
         d["links"] = [link.to_dict() for link in self.iter_links()]
         d["assets"] = dict((key, asset.to_dict()) for key, asset in self.assets.items())
-        d["collection"] = self.collection
+        if self.collection is not None:
+            d["collection"] = self.collection
         d.update(copy.deepcopy(self.extra_fields))
         return d
 

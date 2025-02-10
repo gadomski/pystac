@@ -245,5 +245,29 @@ class STACObject(ABC):
     def to_dict(self) -> dict[str, Any]:
         """Converts this STAC object to a dictionary."""
 
+    def validate(self) -> None:
+        """Validates this STAC object using the default validator (jsonschema).
+
+        If you want to validate multiple objects, it can be more efficient to
+        create a validator directly, as the validator caches fetched schemas:
+
+        ```python
+        validator = pystac.validate.DefaultValidator()
+        for stac_object in stac_objects:
+            validator.validate(stac_object)
+        ```
+
+        Raises:
+            ValidationError: If the STAC object is invalid, this error will
+                contain all the underlying validation errors.
+            ImportError: If pystac has not been installed with the `validate`
+                extra dependency set (e.g. with `python -m pip install
+                'pystac[validate]'`)
+        """
+        from .validate.jsonschema import JsonschemaValidator
+
+        validator = JsonschemaValidator()
+        validator.validate(self)
+
     def __repr__(self) -> str:
         return f"<pystac.{self.__class__.__name__} id={self.id}>"
