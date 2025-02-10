@@ -18,7 +18,11 @@ class JsonschemaValidator(Validator):
     """A validator using [json-schema](https://json-schema.org/)."""
 
     def __init__(self) -> None:
-        """Creates a new validator."""
+        """Creates a new json-schmea validator.
+
+        This fetches many of the common schemas from local storage, so we don't
+        have to hit the network for them.
+        """
 
         self._registry = Registry(retrieve=cached_retrieve_via_httpx).with_contents(  # type: ignore
             registry_contents()
