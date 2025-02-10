@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 import pystac
-from pystac import DEFAULT_STAC_VERSION, Catalog, Item, PystacError
+from pystac import DEFAULT_STAC_VERSION, Catalog, Item, PystacError, StacError
 
 
 def test_catalog() -> None:
@@ -105,3 +105,10 @@ def test_set_stac_version() -> None:
     catalog.set_stac_version("1.0.0")
     assert catalog.stac_version == "1.0.0"
     assert child.stac_version == "1.0.0"
+
+
+def test_wrong_type_field() -> None:
+    d = Catalog("an-id", "a description").to_dict()
+    d["type"] = "CustomCatalog"
+    with pytest.raises(StacError):
+        Catalog.from_dict(d)

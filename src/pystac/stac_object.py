@@ -14,7 +14,7 @@ from .constants import (
     PARENT_REL,
     ROOT_REL,
 )
-from .errors import PystacError, StacError
+from .errors import StacError
 from .link import Link
 
 if TYPE_CHECKING:
@@ -22,24 +22,42 @@ if TYPE_CHECKING:
 
 
 class STACObject(ABC):
-    """The base class for all STAC values."""
+    """The base class for all STAC objects."""
 
     @classmethod
     @abstractmethod
-    def get_type(cls: type[Self]) -> str: ...
+    def get_type(cls: type[Self]) -> str:
+        """Returns the `type` field for this STAC object.
+
+        Examples:
+            >>> print(Item.get_type())
+            "Feature"
+        """
 
     @classmethod
     def from_file(cls: type[Self], href: str | Path) -> Self:
+        """Reads a STAC object from a JSON file.
+
+        Use this class method to "downcast" a STAC object to a given type.
+
+        Raises:
+            StacError: Raised if the object's type does not match the calling class.
+
+        Examples:
+            >>> catalog = Catalog.from_file("catalog.json")
+            >>> Item.from_file("catalog.json") # Will raise a `StacError`
+        """
         from . import io
 
         stac_object = io.read_file(href)
         if isinstance(stac_object, cls):
             return stac_object
         else:
-            raise PystacError(f"expected {cls}, read {type(stac_object)} from {href}")
+            raise StacError(f"expected {cls}, read {type(stac_object)} from {href}")
 
     @classmethod
     def from_dict(cls: type[STACObject], d: dict[str, Any]) -> STACObject:
+        """Creates a STAC object from a dictionary."""
         if type_value := d.get("type"):
             if type_value == CATALOG_TYPE:
                 from .catalog import Catalog
@@ -54,7 +72,7 @@ class STACObject(ABC):
 
                 return Item(**d)
             else:
-                raise NotImplementedError
+                raise StacError(f"unknown type field: {type_value}")
         else:
             raise StacError("missing type field on dictionary")
 
