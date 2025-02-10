@@ -39,3 +39,15 @@ def test_child_catalog_render(renderer: Renderer) -> None:
     renderer.render(catalog)
     assert catalog.get_href() == "/pystac/catalog.json"
     assert child.get_href() == "/pystac/child/catalog.json"
+
+
+def test_full_tree_render(renderer: Renderer) -> None:
+    catalog = Catalog("parent", "parent catalog")
+    child = Collection("child", "child collection")
+    item = Item("an-id")
+    catalog.add_child(child)
+    child.add_item(item)
+    renderer.render(catalog)
+    assert catalog.get_href() == "/pystac/catalog.json"
+    assert child.get_href() == "/pystac/child/collection.json"
+    assert item.get_href() == "/pystac/child/an-id/an-id.json"

@@ -1,3 +1,36 @@
+"""Use renderers to build links and set hrefs on STAC objects, their children,
+and their items.
+
+STAC catalogs look like trees:
+
+```mermaid
+graph TD
+    catalog["Catalog"] --> collection["Collection"] --> item["Item"]
+```
+
+Via `links`, STAC objects can "live" anywhere ... their locations on a
+filesystem or in blob storage don't have to mirror their tree structure. In
+PySTAC v2.0, STAC "trees" are mapped onto hrefs via a process called "rendering":
+
+```python
+catalog = Catalog("an-id", "a description")
+collection = Collection("a-collection", "the collection")
+item = Item("an-item")
+catalog.add_child(collection)
+collection.add_item(item)
+
+catalog.render("/pystac")
+
+assert catalog.get_self_href() == "/pystac/catalog.json"
+assert collection.get_self_href() == "/pystac/a-collection/collection.json"
+assert item.get_self_href() == "/pystac/a-collection/an-item/an-item.json"
+```
+
+Note:
+    In PySTAC v1.x, setting hrefs and links was handled in
+    [layout](https://pystac.readthedocs.io/en/stable/api/layout.html).
+"""
+
 from abc import ABC, abstractmethod
 
 from .catalog import Catalog
@@ -9,10 +42,14 @@ from .stac_object import STACObject
 
 
 class Renderer(ABC):
+    """The base class for all renderers."""
+
     def __init__(self, root: str):
+        """Creates a new renderer, rooted at the location provided."""
         self.root = root
 
     def render(self, stac_object: STACObject) -> None:
+        """Render a single STAC object by modifying its self href and links."""
         from .catalog import Catalog
         from .collection import Collection
         from .item import Item
@@ -43,16 +80,21 @@ class Renderer(ABC):
                 self.render(leaf)
 
     @abstractmethod
-    def get_item_href(self, item: Item, base: str) -> str: ...
+    def get_item_href(self, item: Item, base: str) -> str:
+        """Returns an item's href."""
 
     @abstractmethod
-    def get_collection_href(self, collection: Collection, base: str) -> str: ...
+    def get_collection_href(self, collection: Collection, base: str) -> str:
+        """Returns a collection's href."""
 
     @abstractmethod
-    def get_catalog_href(self, catalog: Catalog, base: str) -> str: ...
+    def get_catalog_href(self, catalog: Catalog, base: str) -> str:
+        """Returns a catalog's href."""
 
 
 class DefaultRenderer(Renderer):
+    """The default renderer, based on STAC [best practices](https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog-layout)."""
+
     def get_item_href(self, item: Item, base: str) -> str:
         return base + "/" + item.id + ".json"
 

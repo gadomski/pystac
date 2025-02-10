@@ -21,11 +21,19 @@ class Catalog(Container):
         links: list[Link | dict[str, Any]] | None = None,
         **kwargs: Any,
     ):
+        """Creates a new catalog.
+
+        Args:
+            id: This catalog's id
+            description: This catalog's description
+            title: This catalog's title
+        """
         self.description = description
         self.title = title
         super().__init__(id, stac_version, stac_extensions, links, **kwargs)
 
     def to_dict(self) -> dict[str, Any]:
+        """Converts this catalog to a dictionary."""
         d: dict[str, Any] = {
             "type": self.get_type(),
             "stac_version": self.stac_version,

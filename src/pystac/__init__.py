@@ -1,3 +1,4 @@
+from .asset import Asset, ItemAsset
 from .catalog import Catalog
 from .collection import Collection
 from .constants import DEFAULT_STAC_VERSION
@@ -12,6 +13,7 @@ from .render import DefaultRenderer, Renderer
 from .stac_object import STACObject
 
 __all__ = [
+    "Asset",
     "Catalog",
     "Collection",
     "Container",
@@ -19,6 +21,7 @@ __all__ = [
     "DefaultRenderer",
     "Extent",
     "Item",
+    "ItemAsset",
     "Link",
     "PystacError",
     "Reader",

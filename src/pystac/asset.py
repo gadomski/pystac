@@ -7,8 +7,14 @@ from typing_extensions import Self
 
 
 class ItemAsset:
+    """An asset without a href.
+
+    This was made a "first-class" data structure in STAC v1.1.
+    """
+
     @classmethod
     def from_dict(cls: type[Self], d: dict[str, Any]) -> Self:
+        """Creates a new item asset from a dictionary."""
         return cls(**d)
 
     def __init__(
@@ -19,6 +25,7 @@ class ItemAsset:
         roles: list[str] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Creates a new item asset."""
         self.title = title
         self.description = description
         self.type = type
@@ -26,6 +33,7 @@ class ItemAsset:
         self.extra_fields = kwargs
 
     def to_dict(self) -> dict[str, Any]:
+        """Converts this item asset to a dictionary."""
         d: dict[str, Any] = {}
         if self.title is not None:
             d["title"] = self.title
@@ -40,8 +48,11 @@ class ItemAsset:
 
 
 class Asset(ItemAsset):
+    """An asset, e.g. a geospatial data file."""
+
     @classmethod
     def from_dict(cls: type[Self], d: dict[str, Any]) -> Self:
+        """Creates an asset from a dictionary."""
         return cls(**d)
 
     def __init__(
@@ -53,12 +64,14 @@ class Asset(ItemAsset):
         roles: list[str] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Creates a new asset."""
         self.href = href
         super().__init__(
             title=title, description=description, type=type, roles=roles, **kwargs
         )
 
     def to_dict(self) -> dict[str, Any]:
+        """Converts this asset to a dictionary."""
         d = {"href": self.href}
         d.update(super().to_dict())
         return d

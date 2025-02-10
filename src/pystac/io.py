@@ -30,7 +30,7 @@ def write_file(stac_object: STACObject) -> None:
 
     Warning:
         This function is deprecated as of v2.0 and will be removed in a future
-        version. Use [STACObject.write_file][pystac.STACObject.write_file]
+        version. Use [STACObject.save_object][pystac.STACObject.save_object]
         instead.
 
     Args:

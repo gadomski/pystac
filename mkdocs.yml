@@ -4,6 +4,7 @@ repo_name: stac-utils/pystac
 repo_url: https://github.com/stac-utils/pystac
 theme:
   name: material
+  logo: img/stac-python.png
   features:
     - navigation.instant
   palette:
@@ -36,7 +37,11 @@ nav:
       - api/catalog.md
       - api/collection.md
       - api/item.md
+      - api/asset.md
+      - api/render.md
       - api/reader.md
+      - api/writer.md
+      - api/constants.md
 
 extra:
   alias: true
@@ -56,3 +61,11 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
             separate_signature: true
+            show_signature_annotations: true
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
